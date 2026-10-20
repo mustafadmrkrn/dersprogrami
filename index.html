@@ -4,257 +4,344 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1e3a5f">
-<title>Haftalık Ders Programı Oluşturucu</title>
+<title>Mentörlük Ders Programı</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
-  body{font-family:Inter,sans-serif;background:#eef1f6;-webkit-tap-highlight-color:transparent}
-  .display{font-family:'Bricolage Grotesque',Inter,sans-serif}
-  .drag-over{background:#dbeafe!important;outline:2px dashed #2563eb;outline-offset:-2px}
-  .dragging{opacity:.4}
-  .pdf-hide{display:none!important}
-  .pill.sel{outline:3px solid #1e3a5f;outline-offset:2px}
-  body.picking .cell{cursor:copy}
-  @media (hover:none){.del{opacity:1!important}}
-  summary{list-style:none;cursor:pointer}summary::-webkit-details-marker{display:none}
-  :focus-visible{outline:2px solid #2563eb;outline-offset:2px}
+:root{--bg:#eef1f6;--card:#fff;--soft:#f1f5f9;--line:#e2e8f0;--tx:#1e293b;--mu:#64748b;--hd:#1e3a5f;--ac:#1e3a5f;--pri:#1e3a5f}
+.dark{--bg:#0b1220;--card:#162033;--soft:#1c2940;--line:#2f3f5c;--tx:#e2e8f0;--mu:#94a3b8;--hd:#0a1730;--ac:#93c5fd;--pri:#2563eb}
+body{font-family:Inter,sans-serif;background:var(--bg);color:var(--tx);-webkit-tap-highlight-color:transparent}
+.display{font-family:'Bricolage Grotesque',Inter,sans-serif}
+.side,.card{background:var(--card);border-color:var(--line)}
+.card{border-width:1px}
+.soft{background:var(--soft)}.bd{border-color:var(--line)}.mu{color:var(--mu)}.ac{color:var(--ac)}
+.inp{background:var(--card);border:1px solid var(--line);color:var(--tx);border-radius:.5rem;padding:.5rem .75rem;font-size:.875rem;width:100%;min-width:0}
+.btn{padding:.5rem .75rem;border-radius:.5rem;font-size:.8rem;font-weight:600;background:var(--soft);border:1px solid var(--line);color:var(--tx)}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+.hd{background:var(--hd)}
+.r0{background:var(--card)}.r1{background:var(--soft)}
+.m1{background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.25) 0 5px,transparent 5px 10px)}
+.m2{outline:2px solid rgba(255,255,255,.8);outline-offset:-4px}
+.seg.on{background:var(--pri);color:#fff}
+.seg{padding:.45rem .25rem;border-radius:.5rem;font-size:.72rem;font-weight:600}
+.drag-over{background:rgba(37,99,235,.25)!important;outline:2px dashed #2563eb;outline-offset:-2px}
+.dragging{opacity:.4}
+.pdf-hide{display:none!important}
+.pill.sel{outline:3px solid var(--ac);outline-offset:2px}
+body.picking .cell{cursor:copy}
+@media (hover:none){.del{opacity:1!important}}
+summary{list-style:none;cursor:pointer}summary::-webkit-details-marker{display:none}
+:focus-visible{outline:2px solid #3b82f6;outline-offset:2px}
 </style>
 </head>
-<body class="text-slate-800">
-<div class="lg:flex lg:h-screen">
+<body>
 
-<!-- ===== ARAÇLAR ===== -->
-<aside class="lg:w-[350px] lg:shrink-0 lg:h-full lg:overflow-y-auto bg-white border-b lg:border-b-0 lg:border-r border-slate-200 p-4 sm:p-5 space-y-4">
-  <div>
-    <h1 class="display text-2xl font-extrabold text-[#1e3a5f] leading-tight">Ders Programım</h1>
-    <p class="text-xs text-slate-500">Bir ders seç, sonra tablodaki saate dokun. Bilgisayarda sürükleyebilirsin.</p>
+<!-- ===== EDİTÖR ===== -->
+<div id="vEdit" class="lg:flex lg:h-screen">
+<aside class="side lg:w-[360px] lg:shrink-0 lg:h-full lg:overflow-y-auto border-b lg:border-b-0 lg:border-r p-4 sm:p-5 space-y-5">
+  <div class="flex items-start justify-between gap-2">
+    <h1 class="display text-2xl font-extrabold ac leading-tight">Mentörlük<br>Ders Programı</h1>
+    <button class="btn themeBtn shrink-0"></button>
   </div>
+  <a href="#gecmis" target="_blank" class="btn block text-center">Geçmiş kayıtları aç ↗</a>
 
-  <details id="dInfo" class="rounded-xl border border-slate-200 bg-slate-50">
-    <summary class="px-4 py-2.5 text-sm font-semibold flex justify-between">Öğrenci bilgileri <span class="text-slate-400">▾</span></summary>
-    <div class="px-4 pb-4 space-y-2">
-      <input id="nameIn" placeholder="Ad Soyad" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200">
-      <input id="classIn" placeholder="Sınıf / Şube" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200">
-      <div class="grid grid-cols-2 gap-2 pt-1">
-        <label class="text-xs text-slate-500">İlk saat
-          <select id="startSel" class="mt-1 w-full px-2 py-2 text-sm rounded-lg border border-slate-200 bg-white"></select></label>
-        <label class="text-xs text-slate-500">Son saat
-          <select id="endSel" class="mt-1 w-full px-2 py-2 text-sm rounded-lg border border-slate-200 bg-white"></select></label>
+  <section class="space-y-2">
+    <h2 class="text-sm font-semibold">Öğrencilerim</h2>
+    <select id="stSel" class="inp"></select>
+    <div class="grid grid-cols-2 gap-2"><button id="stEdit" class="btn">Düzenle</button><button id="stDel" class="btn text-rose-500">Sil</button></div>
+    <details id="dSt" class="card rounded-xl">
+      <summary class="px-3 py-2.5 text-sm font-semibold flex justify-between">Yeni öğrenci ekle <span class="mu">▾</span></summary>
+      <div class="p-3 pt-0 space-y-2">
+        <input id="stName" class="inp" placeholder="Ad Soyad">
+        <input id="stCls" class="inp" placeholder="Sınıf / Şube">
+        <button id="stAdd" class="btn pri w-full">Öğrenciyi ekle</button>
       </div>
-    </div>
-  </details>
+    </details>
+  </section>
 
-  <details id="dNew" class="rounded-xl border border-slate-200 bg-slate-50">
-    <summary class="px-4 py-2.5 text-sm font-semibold flex justify-between">Yeni ders ekle <span class="text-slate-400">▾</span></summary>
-    <div class="px-4 pb-4 flex gap-2">
-      <input id="newName" maxlength="24" placeholder="Ders adı" class="min-w-0 flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200">
-      <input id="newColor" type="color" value="#f59e0b" aria-label="Ders rengi" class="w-11 h-10 p-1 rounded-lg border border-slate-200 bg-white">
-      <button id="addBtn" class="px-4 rounded-lg bg-[#1e3a5f] text-white text-sm font-semibold">Ekle</button>
-    </div>
-  </details>
+  <section class="space-y-2">
+    <h2 class="text-sm font-semibold">Bu öğrencinin programları</h2>
+    <select id="plSel" class="inp"></select>
+    <input id="plTitle" class="inp" placeholder="Program adı">
+    <div class="grid grid-cols-3 gap-2"><button id="plNew" class="btn">Yeni</button><button id="plCopy" class="btn">Kopyala</button><button id="plDel" class="btn text-rose-500">Sil</button></div>
+    <details id="dHrs" class="card rounded-xl">
+      <summary class="px-3 py-2.5 text-sm font-semibold flex justify-between">Saat aralığı <span class="mu">▾</span></summary>
+      <div class="p-3 pt-0 grid grid-cols-2 gap-2">
+        <label class="text-xs mu">İlk saat<select id="startSel" class="inp mt-1"></select></label>
+        <label class="text-xs mu">Son saat<select id="endSel" class="inp mt-1"></select></label>
+      </div>
+    </details>
+  </section>
 
-  <div>
-    <div class="flex items-baseline justify-between mb-2">
-      <h2 class="text-sm font-semibold">Dersler</h2>
-      <span id="total" class="text-xs text-slate-500"></span>
+  <section class="space-y-2">
+    <h2 class="text-sm font-semibold">Çalışma türü</h2>
+    <div id="modes" class="grid grid-cols-3 gap-1 p-1 soft rounded-xl">
+      <button class="seg" data-m="0">Ders</button><button class="seg" data-m="1">Soru çözümü</button><button class="seg" data-m="2">Ders tekrarı</button>
     </div>
+  </section>
+
+  <section class="space-y-2">
+    <div class="flex items-baseline justify-between gap-2"><h2 class="text-sm font-semibold">Dersler</h2><span id="total" class="text-[11px] mu text-right"></span></div>
     <div id="palette" class="flex flex-wrap gap-2"></div>
-  </div>
+    <details class="card rounded-xl">
+      <summary class="px-3 py-2.5 text-sm font-semibold flex justify-between">Yeni ders ekle <span class="mu">▾</span></summary>
+      <div class="p-3 pt-0 flex gap-2">
+        <input id="newName" maxlength="24" placeholder="Ders adı" class="inp flex-1">
+        <input id="newColor" type="color" value="#f59e0b" aria-label="Ders rengi" class="w-11 h-10 p-1 rounded-lg border bd soft">
+        <button id="addBtn" class="btn pri">Ekle</button>
+      </div>
+    </details>
+  </section>
 
-  <div class="grid grid-cols-2 lg:grid-cols-1 gap-2 pt-1">
+  <div class="grid grid-cols-2 lg:grid-cols-1 gap-2">
     <button id="pdfBtn" class="py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm">PDF olarak indir</button>
-    <button id="clearBtn" class="py-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-medium text-sm">Programı temizle</button>
+    <button id="clearBtn" class="btn py-3 text-rose-500">Tabloyu temizle</button>
   </div>
 </aside>
 
-<!-- ===== TABLO ===== -->
 <main class="flex-1 lg:h-full lg:overflow-y-auto p-3 sm:p-6">
-  <div id="selBar" class="hidden sticky top-2 z-30 mb-3 mx-auto max-w-[1240px] items-center justify-between rounded-xl bg-[#1e3a5f] text-white px-4 py-2.5 text-sm shadow-lg">
-    <span id="selTxt"></span>
-    <button id="selX" class="underline text-white/80">Vazgeç</button>
+  <div id="selBar" class="hidden sticky top-2 z-30 mb-3 mx-auto max-w-[1240px] items-center justify-between rounded-xl text-white px-4 py-2.5 text-sm shadow-lg" style="background:var(--pri)">
+    <span id="selTxt"></span><button id="selX" class="underline opacity-80">Vazgeç</button>
   </div>
-
-  <div id="sheet" class="mx-auto max-w-[1240px] bg-white rounded-2xl shadow-xl border border-slate-200 p-4 sm:p-6">
-    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 pb-4 mb-4 border-b-2 border-[#1e3a5f]">
+  <div id="sheet" class="card mx-auto max-w-[1240px] rounded-2xl shadow-xl p-4 sm:p-6">
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 pb-4 mb-4 border-b-2" style="border-color:var(--ac)">
       <div>
-        <h2 class="display text-2xl sm:text-3xl font-extrabold text-[#1e3a5f]">Haftalık Ders Programı</h2>
-        <p class="text-xs text-slate-500">Çalışma planı</p>
+        <h2 class="display text-2xl sm:text-3xl font-extrabold ac">Mentörlük Ders Programı</h2>
+        <p id="pPlan" class="text-xs mu"></p>
       </div>
       <div class="flex gap-5 text-sm">
-        <div><div class="text-[11px] text-slate-400">Öğrenci</div><div id="pName" class="font-bold"></div></div>
-        <div><div class="text-[11px] text-slate-400">Sınıf</div><div id="pClass" class="font-bold text-blue-700"></div></div>
+        <div><div class="text-[11px] mu">Öğrenci</div><div id="pName" class="font-bold"></div></div>
+        <div><div class="text-[11px] mu">Sınıf</div><div id="pClass" class="font-bold ac"></div></div>
       </div>
     </div>
-
-    <div class="overflow-x-auto rounded-xl border border-slate-200">
+    <div class="overflow-x-auto rounded-xl border bd">
       <table class="w-full min-w-[720px] border-collapse text-center">
-        <thead><tr id="thead" class="bg-[#1e3a5f] text-white text-xs"></tr></thead>
+        <thead><tr id="thead" class="hd text-white text-xs"></tr></thead>
         <tbody id="tbody" class="text-xs"></tbody>
       </table>
     </div>
-    <div class="mt-3 text-[11px] text-slate-400 flex justify-between"><span>Düzenli çalışma başarıyı getirir.</span><span id="dateTxt"></span></div>
+    <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] mu">
+      <span class="flex items-center gap-1.5"><i class="inline-block w-4 h-3 rounded bg-slate-500"></i>Ders</span>
+      <span class="flex items-center gap-1.5"><i class="m1 inline-block w-4 h-3 rounded bg-slate-500"></i>Soru çözümü</span>
+      <span class="flex items-center gap-1.5"><i class="m2 inline-block w-4 h-3 rounded bg-slate-500"></i>Ders tekrarı</span>
+      <span class="ml-auto" id="dateTxt"></span>
+    </div>
   </div>
 </main>
 </div>
 
-<script>
-const DAYS=['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'];
-const $=id=>document.getElementById(id);
-const DEF=[['Matematik','#dc2626'],['Fizik','#2563eb'],['Kimya','#059669'],['Edebiyat','#7c3aed'],['Tarih','#ea580c'],['İngilizce','#0891b2'],['Coğrafya','#0d9488'],['Biyoloji','#16a34a'],['Almanca','#b45309'],['Kitap Okuma','#db2777']];
-let S={name:'Ahmet Yılmaz',cls:'11-A Fen',start:10,end:23,courses:DEF.map((c,i)=>({id:'c'+i,name:c[0],color:c[1]})),grid:{}};
-try{const x=JSON.parse(localStorage.getItem('dersProgrami')||'null');if(x&&x.courses)S=x}catch(e){}
-let sel=null,drag=null;
-const save=()=>{try{localStorage.setItem('dersProgrami',JSON.stringify(S))}catch(e){}};
-const course=id=>S.courses.find(c=>c.id===id);
-const hh=h=>String(h%24).padStart(2,'0')+':00';
+<!-- ===== GEÇMİŞ KAYITLAR ===== -->
+<div id="vHist" class="hidden min-h-screen p-4 sm:p-8 max-w-5xl mx-auto">
+  <div class="flex items-start justify-between gap-2 mb-6 flex-wrap">
+    <div><h1 class="display text-3xl font-extrabold ac">Geçmiş kayıtlar</h1><p class="mu text-sm">Mentörlük Ders Programı</p></div>
+    <div class="flex gap-2"><a href="#" class="btn pri">Programa dön</a><button class="btn themeBtn"></button></div>
+  </div>
+  <select id="hSel" class="inp mb-5 sm:w-72"></select>
+  <div id="hList" class="space-y-4"></div>
+</div>
 
-// saat seçicileri
-for(let h=6;h<=23;h++){
-  $('startSel').add(new Option(hh(h),h));
-  $('endSel').add(new Option(hh(h)+' - '+hh(h+1),h));
-}
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DAYS=['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'];
+const MODES=['Ders','Soru çözümü','Ders tekrarı'];
+const DEF=[['Matematik','#dc2626'],['Fizik','#2563eb'],['Kimya','#059669'],['Edebiyat','#7c3aed'],['Tarih','#ea580c'],['İngilizce','#0891b2'],['Coğrafya','#0d9488'],['Biyoloji','#16a34a'],['Almanca','#b45309'],['Kitap Okuma','#db2777']];
+const KEY='mentorDB';
+let DB,sel=null,mode=0,drag=null;
+function load(){let x=null;try{x=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+  DB=x&&x.students?x:{students:[],plans:[],courses:DEF.map((c,i)=>({id:'c'+i,name:c[0],color:c[1]})),sid:null,pid:null,dark:matchMedia('(prefers-color-scheme: dark)').matches}}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}};
+load();
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const today=()=>new Date().toISOString().slice(0,10);
+const fmt=d=>new Date(d).toLocaleDateString('tr-TR');
+const hh=h=>String(h%24).padStart(2,'0')+':00';
+const stu=()=>DB.students.find(s=>s.id===DB.sid);
+const plan=()=>DB.plans.find(p=>p.id===DB.pid&&p.sid===DB.sid);
+const course=id=>DB.courses.find(c=>c.id===id);
+const plansOf=sid=>DB.plans.filter(p=>p.sid===sid);
+
+function applyTheme(){document.documentElement.classList.toggle('dark',!!DB.dark);
+  document.querySelectorAll('.themeBtn').forEach(b=>b.textContent=DB.dark?'☀ Aydınlık':'☾ Karanlık')}
+document.querySelectorAll('.themeBtn').forEach(b=>b.onclick=()=>{DB.dark=!DB.dark;save();applyTheme()});
+
+function newPlan(sid,src){
+  const p={id:uid(),sid,title:src?src.title+' (kopya)':'Program '+(plansOf(sid).length+1),date:today(),
+    start:src?src.start:10,end:src?src.end:23,grid:src?JSON.parse(JSON.stringify(src.grid)):{}};
+  DB.plans.push(p);DB.pid=p.id;return p}
+function ensure(){
+  if(!stu())DB.sid=DB.students.length?DB.students[0].id:null;
+  if(DB.sid&&!plan()){const ps=plansOf(DB.sid);DB.pid=ps.length?ps[ps.length-1].id:newPlan(DB.sid).id}
+  save()}
+
+// ---------- ÖĞRENCİ ----------
+function pickStudent(id){DB.sid=id;DB.pid=null;ensure();renderEdit()}
+$('stSel').onchange=e=>pickStudent(e.target.value);
+$('stAdd').onclick=()=>{
+  const n=$('stName').value.trim();if(!n){$('stName').focus();return}
+  const s={id:uid(),name:n,cls:$('stCls').value.trim()};DB.students.push(s);
+  $('stName').value=$('stCls').value='';$('dSt').open=false;pickStudent(s.id)};
+$('stEdit').onclick=()=>{const s=stu();if(!s)return;
+  const n=prompt('Ad Soyad',s.name);if(n===null)return;const c=prompt('Sınıf / Şube',s.cls);
+  s.name=n.trim()||s.name;if(c!==null)s.cls=c.trim();save();renderEdit()};
+$('stDel').onclick=()=>{const s=stu();if(!s)return;
+  if(!confirm(`${s.name} ve tüm programları silinsin mi?`))return;
+  DB.students=DB.students.filter(x=>x.id!==s.id);DB.plans=DB.plans.filter(p=>p.sid!==s.id);DB.sid=null;DB.pid=null;ensure();renderEdit()};
+
+// ---------- PROGRAM ----------
+$('plSel').onchange=e=>{DB.pid=e.target.value;save();renderEdit()};
+$('plNew').onclick=()=>{if(!stu())return needStudent();newPlan(DB.sid);save();renderEdit()};
+$('plCopy').onclick=()=>{const p=plan();if(!p)return needStudent();newPlan(DB.sid,p);save();renderEdit()};
+$('plDel').onclick=()=>{const p=plan();if(!p||!confirm('Bu program silinsin mi?'))return;
+  DB.plans=DB.plans.filter(x=>x.id!==p.id);DB.pid=null;ensure();renderEdit()};
+$('plTitle').oninput=e=>{const p=plan();if(!p)return;p.title=e.target.value;
+  $('pPlan').textContent=p.title;$('plSel').selectedOptions[0].textContent=p.title+' · '+fmt(p.date);save()};
+$('startSel').onchange=e=>{const p=plan();if(!p)return;p.start=+e.target.value;if(p.end<p.start){p.end=p.start;$('endSel').value=p.end}buildTable()};
+$('endSel').onchange=e=>{const p=plan();if(!p)return;p.end=+e.target.value;if(p.end<p.start){p.start=p.end;$('startSel').value=p.start}buildTable()};
+for(let h=6;h<=23;h++){$('startSel').add(new Option(hh(h),h));$('endSel').add(new Option(hh(h)+' - '+hh(h+1),h))}
+function needStudent(){$('dSt').open=true;$('stName').focus();return true}
+
+// ---------- RENDER ----------
+function renderEdit(){
+  applyTheme();ensure();
+  const s=stu(),p=plan();
+  $('stSel').innerHTML=DB.students.length?DB.students.map(x=>`<option value="${x.id}">${esc(x.name)}${x.cls?' ('+esc(x.cls)+')':''}</option>`).join(''):'<option value="">Henüz öğrenci yok</option>';
+  if(s)$('stSel').value=s.id;
+  $('plSel').innerHTML=s?plansOf(s.id).map(x=>`<option value="${x.id}">${esc(x.title)} · ${fmt(x.date)}</option>`).join(''):'';
+  if(p){$('plSel').value=p.id;$('startSel').value=p.start;$('endSel').value=p.end}
+  $('plTitle').value=p?p.title:'';
+  $('pName').textContent=s?s.name:'Öğrenci seçilmedi';$('pClass').textContent=s&&s.cls||'-';
+  $('pPlan').textContent=p?p.title:'Önce bir öğrenci ekle';$('dateTxt').textContent=p?fmt(p.date):'';
+  if(!s)$('dSt').open=true;
+  if(innerWidth>=1024)$('dHrs').open=true;
+  document.querySelectorAll('#modes .seg').forEach(b=>b.classList.toggle('on',+b.dataset.m===mode));
+  buildTable()}
 
 function buildTable(){
-  const today=(new Date().getDay()+6)%7;
-  $('thead').innerHTML='<th class="py-2.5 px-2 w-[74px] sticky left-0 bg-[#1e3a5f] z-[1]">Saat</th>'+
-    DAYS.map((d,i)=>`<th class="py-2.5 px-1 ${i===today?'bg-blue-600':''}">${d}</th>`).join('');
+  const p=plan()||{start:10,end:23},t0=(new Date().getDay()+6)%7;
+  $('thead').innerHTML='<th class="py-2.5 px-2 w-[74px] sticky left-0 hd z-[1]">Saat</th>'+DAYS.map((d,i)=>`<th class="py-2.5 px-1" ${i===t0?'style="background:var(--pri)"':''}>${d}</th>`).join('');
   let h='';
-  for(let t=S.start;t<=S.end;t++){
-    h+=`<tr class="${t%2?'bg-white':'bg-slate-50'} border-t border-slate-200"><td class="sticky left-0 z-[1] bg-slate-100 border-r border-slate-200 py-1 font-bold text-[11px]">${hh(t)}<br><span class="font-normal text-slate-400 text-[9px]">${hh(t+1)}</span></td>`+
-      DAYS.map((_,i)=>`<td class="cell p-1 h-11 border-r border-slate-100 last:border-r-0 min-w-[84px]" data-k="${i}-${t}"></td>`).join('')+'</tr>';
-  }
-  $('tbody').innerHTML=h;paintGrid();
-}
+  for(let t=p.start;t<=p.end;t++){
+    h+=`<tr class="${t%2?'r0':'r1'} border-t bd"><td class="sticky left-0 z-[1] soft border-r bd py-1 font-bold text-[11px]">${hh(t)}<br><span class="font-normal mu text-[9px]">${hh(t+1)}</span></td>`+
+      DAYS.map((_,i)=>`<td class="cell p-1 h-11 border-r bd min-w-[84px]" data-k="${i}-${t}"></td>`).join('')+'</tr>'}
+  $('tbody').innerHTML=h;paintGrid()}
 
 function paintGrid(){
-  const counts={};
+  const p=plan(),g=p?p.grid:{},cnt={},mc=[0,0,0];
   document.querySelectorAll('.cell').forEach(td=>{
-    const k=td.dataset.k,c=course(S.grid[k]);td.innerHTML='';
-    if(!c)return;
-    counts[c.id]=(counts[c.id]||0)+1;
+    td.innerHTML='';const k=td.dataset.k,v=g[k],c=v&&course(v.c);if(!c)return;
+    cnt[c.id]=(cnt[c.id]||0)+1;mc[v.m]++;
     const d=document.createElement('div');
-    d.className='group relative h-full min-h-[36px] rounded-lg text-white font-semibold text-[11px] flex items-center justify-center px-1.5 shadow-sm';
+    d.className='group relative h-full min-h-[38px] rounded-lg text-white flex flex-col items-center justify-center px-1 leading-tight'+(v.m?' m'+v.m:'');
     d.style.background=c.color;d.draggable=true;d.dataset.card=k;
-    const s=document.createElement('span');s.className='truncate pointer-events-none';s.textContent=c.name;d.appendChild(s);
-    const x=document.createElement('button');x.className='del pdf-ignore absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-white text-rose-600 border border-rose-200 text-xs leading-none opacity-0 group-hover:opacity-100 shadow';
-    x.textContent='×';x.dataset.del=k;x.setAttribute('aria-label','Sil');d.appendChild(x);
-    td.appendChild(d);
-  });
-  paintPalette(counts);
-  const n=Object.values(counts).reduce((a,b)=>a+b,0);
-  $('total').textContent=n?`Haftada ${n} saat`:'';
-  save();
-}
-
-function paintPalette(counts=null){
-  if(!counts){paintGrid();return}
+    d.innerHTML=`<span class="n truncate max-w-full text-[11px] font-semibold pointer-events-none"></span><span class="l text-[9px] pointer-events-none"></span><button class="del pdf-ignore absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-white text-rose-600 border border-rose-200 text-xs leading-none opacity-0 group-hover:opacity-100 shadow" data-del="${k}" aria-label="Sil">×</button>`;
+    d.querySelector('.n').textContent=c.name;const l=d.querySelector('.l');v.m?l.textContent=MODES[v.m]:l.remove();
+    td.appendChild(d)});
   $('palette').innerHTML='';
-  S.courses.forEach(c=>{
-    const p=document.createElement('div');
-    p.className='pill flex items-center gap-1.5 pl-3.5 pr-1.5 py-1.5 rounded-full text-xs font-semibold text-white cursor-pointer select-none shadow-sm'+(sel===c.id?' sel':'');
-    p.style.background=c.color;p.draggable=true;p.dataset.id=c.id;
-    p.innerHTML='<span class="n"></span><span class="cnt bg-white/25 rounded-full px-1.5 text-[10px]"></span><button class="rm w-4 h-4 rounded-full bg-white/25 text-[10px] leading-none" aria-label="Dersi kaldır">×</button>';
-    p.querySelector('.n').textContent=c.name;
-    const cnt=p.querySelector('.cnt');counts[c.id]?cnt.textContent=counts[c.id]+' sa':cnt.remove();
-    $('palette').appendChild(p);
-  });
-}
+  DB.courses.forEach(c=>{
+    const e=document.createElement('div');
+    e.className='pill flex items-center gap-1.5 pl-3.5 pr-1.5 py-1.5 rounded-full text-xs font-semibold text-white cursor-pointer select-none'+(sel===c.id?' sel':'');
+    e.style.background=c.color;e.draggable=true;e.dataset.id=c.id;
+    e.innerHTML='<span class="n"></span><span class="cnt bg-white/25 rounded-full px-1.5 text-[10px]"></span><button class="rm w-4 h-4 rounded-full bg-white/25 text-[10px] leading-none" aria-label="Dersi kaldır">×</button>';
+    e.querySelector('.n').textContent=c.name;const q=e.querySelector('.cnt');cnt[c.id]?q.textContent=cnt[c.id]+' sa':q.remove();
+    $('palette').appendChild(e)});
+  const n=mc[0]+mc[1]+mc[2];
+  $('total').textContent=n?`${n} saat: ${mc[0]} ders, ${mc[1]} soru, ${mc[2]} tekrar`:'';
+  save()}
 
-function setSel(id){
-  sel=id;const c=course(id);
-  $('selBar').classList.toggle('hidden',!c);$('selBar').classList.toggle('flex',!!c);
-  document.body.classList.toggle('picking',!!c);
-  if(c)$('selTxt').textContent=`Seçili: ${c.name}. Yerleştirmek için saate dokun.`;
-  paintPalette({});paintGrid();
-}
+// ---------- SEÇİM / SÜRÜKLE ----------
+function updSel(){const c=course(sel);$('selBar').classList.toggle('hidden',!c);$('selBar').classList.toggle('flex',!!c);
+  document.body.classList.toggle('picking',!!c);if(c)$('selTxt').textContent=`${c.name} · ${MODES[mode]}. Yerleştirmek için saate dokun.`}
+const setSel=id=>{sel=id;updSel();paintGrid()};
 $('selX').onclick=()=>setSel(null);
+$('modes').onclick=e=>{const b=e.target.closest('.seg');if(!b)return;mode=+b.dataset.m;
+  document.querySelectorAll('#modes .seg').forEach(x=>x.classList.toggle('on',x===b));updSel()};
 
-// palet
 $('palette').addEventListener('click',e=>{
-  const p=e.target.closest('.pill');if(!p)return;
-  const id=p.dataset.id;
+  const p=e.target.closest('.pill');if(!p)return;const id=p.dataset.id;
   if(e.target.closest('.rm')){
-    const used=Object.values(S.grid).includes(id);
-    if(used&&!confirm('Bu ders tabloda da kullanılıyor. Hepsiyle birlikte silinsin mi?'))return;
-    S.courses=S.courses.filter(c=>c.id!==id);
-    for(const k in S.grid)if(S.grid[k]===id)delete S.grid[k];
-    if(sel===id)sel=null;setSel(sel);return;
-  }
-  setSel(sel===id?null:id);
-});
-$('palette').addEventListener('dragstart',e=>{
-  const p=e.target.closest('.pill');if(!p)return;
-  drag={id:p.dataset.id,from:null};e.dataTransfer.setData('text/plain',drag.id);e.dataTransfer.effectAllowed='copyMove';
-});
+    const used=DB.plans.some(x=>Object.values(x.grid).some(v=>v.c===id));
+    if(used&&!confirm('Bu ders programlarda kullanılıyor. Hepsinden silinsin mi?'))return;
+    DB.courses=DB.courses.filter(c=>c.id!==id);
+    DB.plans.forEach(x=>{for(const k in x.grid)if(x.grid[k].c===id)delete x.grid[k]});
+    if(sel===id)sel=null;updSel();paintGrid();return}
+  setSel(sel===id?null:id)});
+$('palette').addEventListener('dragstart',e=>{const p=e.target.closest('.pill');if(!p)return;
+  drag={v:{c:p.dataset.id,m:mode},from:null};e.dataTransfer.setData('text/plain','x');e.dataTransfer.effectAllowed='copyMove'});
 
-// tablo
 const tb=$('tbody');
 tb.addEventListener('click',e=>{
-  const del=e.target.closest('[data-del]');
-  if(del){delete S.grid[del.dataset.del];paintGrid();return}
-  const td=e.target.closest('.cell');if(!td)return;
-  const k=td.dataset.k;
-  if(sel)S.grid[k]=sel;else if(S.grid[k])delete S.grid[k];
-  paintGrid();
-});
-tb.addEventListener('dragstart',e=>{
-  const c=e.target.closest('[data-card]');if(!c)return;
-  drag={id:S.grid[c.dataset.card],from:c.dataset.card};e.dataTransfer.setData('text/plain',drag.id);e.dataTransfer.effectAllowed='move';
-  c.classList.add('dragging');
-});
+  const p=plan();if(!p)return needStudent();
+  const del=e.target.closest('[data-del]');if(del){delete p.grid[del.dataset.del];paintGrid();return}
+  const td=e.target.closest('.cell');if(!td)return;const k=td.dataset.k;
+  if(sel)p.grid[k]={c:sel,m:mode};else if(p.grid[k])delete p.grid[k];
+  paintGrid()});
+tb.addEventListener('dragstart',e=>{const c=e.target.closest('[data-card]');if(!c)return;const p=plan();
+  drag={v:{...p.grid[c.dataset.card]},from:c.dataset.card};e.dataTransfer.setData('text/plain','x');e.dataTransfer.effectAllowed='move';c.classList.add('dragging')});
 tb.addEventListener('dragend',()=>{drag=null;paintGrid()});
-tb.addEventListener('dragover',e=>{const td=e.target.closest('.cell');if(!td)return;e.preventDefault();td.classList.add('drag-over')});
-tb.addEventListener('dragleave',e=>{const td=e.target.closest('.cell');td&&td.classList.remove('drag-over')});
+tb.addEventListener('dragover',e=>{const t=e.target.closest('.cell');if(t){e.preventDefault();t.classList.add('drag-over')}});
+tb.addEventListener('dragleave',e=>{const t=e.target.closest('.cell');t&&t.classList.remove('drag-over')});
 tb.addEventListener('drop',e=>{
-  const td=e.target.closest('.cell');if(!td||!drag)return;
-  e.preventDefault();td.classList.remove('drag-over');
-  const k=td.dataset.k,old=S.grid[k];
-  S.grid[k]=drag.id;
-  if(drag.from&&drag.from!==k){old?S.grid[drag.from]=old:delete S.grid[drag.from]}
-  drag=null;paintGrid();
-});
+  const t=e.target.closest('.cell'),p=plan();if(!t||!drag)return;if(!p)return needStudent();
+  e.preventDefault();t.classList.remove('drag-over');
+  const k=t.dataset.k,old=p.grid[k];p.grid[k]=drag.v;
+  if(drag.from&&drag.from!==k){old?p.grid[drag.from]=old:delete p.grid[drag.from]}
+  drag=null;paintGrid()});
 
-// yeni ders
-function addCourse(){
-  const n=$('newName').value.trim();
-  if(!n){$('newName').focus();return}
-  S.courses.push({id:'c'+Date.now(),name:n,color:$('newColor').value});
-  $('newName').value='';paintGrid();
-}
+function addCourse(){const n=$('newName').value.trim();if(!n){$('newName').focus();return}
+  DB.courses.push({id:uid(),name:n,color:$('newColor').value});$('newName').value='';paintGrid()}
 $('addBtn').onclick=addCourse;
 $('newName').addEventListener('keydown',e=>{if(e.key==='Enter')addCourse()});
+$('clearBtn').onclick=()=>{const p=plan();if(p&&confirm('Bu programın tablosu temizlensin mi?')){p.grid={};paintGrid()}};
 
-// bilgiler
-$('nameIn').oninput=e=>{S.name=e.target.value;sync();save()};
-$('classIn').oninput=e=>{S.cls=e.target.value;sync();save()};
-function sync(){$('pName').textContent=S.name.trim()||'İsimsiz';$('pClass').textContent=S.cls.trim()||'-'}
-$('startSel').onchange=e=>{S.start=+e.target.value;if(S.end<S.start){S.end=S.start;$('endSel').value=S.end}buildTable()};
-$('endSel').onchange=e=>{S.end=+e.target.value;if(S.end<S.start){S.start=S.end;$('startSel').value=S.start}buildTable()};
-
-$('clearBtn').onclick=()=>{if(confirm('Tüm program temizlensin mi?')){S.grid={};paintGrid()}};
-
-// PDF
+// ---------- PDF ----------
 $('pdfBtn').onclick=()=>{
-  const el=$('sheet'),btn=$('pdfBtn'),old=btn.textContent;
-  const nm=(S.name.trim()||'Ogrenci').replace(/[^\wçğıöşüÇĞİÖŞÜ\s-]/g,'').replace(/\s+/g,'_');
+  const el=$('sheet'),btn=$('pdfBtn'),old=btn.textContent,p=plan();if(!p)return needStudent();
+  const nm=((stu().name+'_'+p.title).replace(/[^\wçğıöşüÇĞİÖŞÜ\s-]/g,'').replace(/\s+/g,'_'))||'Program';
+  const wasDark=document.documentElement.classList.contains('dark');
+  document.documentElement.classList.remove('dark');
   document.querySelectorAll('.pdf-ignore').forEach(x=>x.classList.add('pdf-hide'));
   const prev=el.style.width;el.style.width='1180px';el.style.maxWidth='none';
   btn.disabled=true;btn.textContent='Hazırlanıyor...';
-  const done=()=>{el.style.width=prev;el.style.maxWidth='';document.querySelectorAll('.pdf-ignore').forEach(x=>x.classList.remove('pdf-hide'));btn.disabled=false;btn.textContent=old};
-  html2pdf().set({margin:8,filename:nm+'_Haftalik_Ders_Programi.pdf',image:{type:'jpeg',quality:.98},
-    html2canvas:{scale:2,useCORS:true,scrollX:0,scrollY:0},jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}})
-    .from(el).save().then(done).catch(()=>{done();alert('PDF oluşturulamadı, tekrar dene.')});
-};
+  const done=()=>{el.style.width=prev;el.style.maxWidth='';wasDark&&document.documentElement.classList.add('dark');
+    document.querySelectorAll('.pdf-ignore').forEach(x=>x.classList.remove('pdf-hide'));btn.disabled=false;btn.textContent=old};
+  html2pdf().set({margin:8,filename:nm+'.pdf',image:{type:'jpeg',quality:.98},html2canvas:{scale:2,useCORS:true,scrollX:0,scrollY:0},
+    jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}}).from(el).save().then(done).catch(()=>{done();alert('PDF oluşturulamadı, tekrar dene.')})};
 
-// başlangıç
-$('nameIn').value=S.name;$('classIn').value=S.cls;
-$('startSel').value=S.start;$('endSel').value=S.end;
-$('dateTxt').textContent=new Date().toLocaleDateString('tr-TR');
-if(innerWidth>=1024)$('dInfo').open=$('dNew').open=true;
-sync();buildTable();
+// ---------- GEÇMİŞ SAYFASI ----------
+function mini(p){let h='<div class="grid gap-[2px] mt-3" style="grid-template-columns:repeat(7,1fr)">';
+  for(let t=p.start;t<=p.end;t++)for(let d=0;d<7;d++){const v=p.grid[d+'-'+t],c=v&&course(v.c);
+    h+=`<i class="h-[7px] rounded-sm ${v&&v.m?'m'+v.m:''}" style="background:${c?c.color:'var(--soft)'}"></i>`}
+  return h+'</div>'}
+function renderHist(){
+  applyTheme();const hs=$('hSel'),cur=hs.value||'all';
+  hs.innerHTML='<option value="all">Tüm öğrenciler</option>'+DB.students.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  hs.value=cur;if(hs.value!==cur)hs.value='all';
+  const list=DB.students.filter(s=>hs.value==='all'||s.id===hs.value);
+  $('hList').innerHTML=list.length?list.map(s=>{
+    const ps=plansOf(s.id).slice().reverse();
+    return `<details open class="card rounded-2xl"><summary class="px-4 py-3 font-semibold flex justify-between gap-2"><span>${esc(s.name)} <span class="mu font-normal text-sm">${esc(s.cls||'')}</span></span><span class="mu text-sm font-normal">${ps.length} program ▾</span></summary>
+      <div class="p-4 pt-1 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">`+ps.map(p=>{
+        const n=Object.keys(p.grid).length;
+        return `<div class="soft rounded-xl p-3"><div class="font-semibold truncate">${esc(p.title)}</div><div class="mu text-xs">${fmt(p.date)} · ${n} saat</div>${mini(p)}
+          <div class="flex gap-2 mt-3"><button class="btn pri flex-1" data-o="${p.id}">Aç</button><button class="btn" data-c="${p.id}">Kopyala</button><button class="btn text-rose-500" data-d="${p.id}">Sil</button></div></div>`}).join('')+'</div></details>'}).join('')
+    :'<p class="mu">Henüz öğrenci veya kayıt yok. Programa dönüp öğrenci ekle.</p>'}
+$('hSel').onchange=renderHist;
+$('hList').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;const id=b.dataset.o||b.dataset.c||b.dataset.d,p=DB.plans.find(x=>x.id===id);if(!p)return;
+  if(b.dataset.o){DB.sid=p.sid;DB.pid=p.id;save();location.hash=''}
+  else if(b.dataset.c){const keep=DB.pid;newPlan(p.sid,p);DB.pid=keep;save();renderHist()}
+  else if(confirm('Bu kayıt silinsin mi?')){DB.plans=DB.plans.filter(x=>x.id!==id);save();renderHist()}});
+
+// ---------- YÖNLENDİRME ----------
+function route(){const h=location.hash==='#gecmis';
+  $('vEdit').classList.toggle('hidden',h);$('vHist').classList.toggle('hidden',!h);h?renderHist():renderEdit()}
+addEventListener('hashchange',route);
+addEventListener('storage',e=>{if(e.key===KEY){load();route()}});
+route();
 </script>
 </body>
 </html>

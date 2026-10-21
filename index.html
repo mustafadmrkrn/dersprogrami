@@ -43,6 +43,26 @@ body.sb .side{transform:none}
 @media (hover:none){.del{opacity:1!important}}
 summary{list-style:none;cursor:pointer}summary::-webkit-details-marker{display:none}
 :focus-visible{outline:2px solid #3b82f6;outline-offset:2px}
+#tip{position:fixed;z-index:60;pointer-events:none;background:#0f172a;color:#fff;font-size:11px;line-height:1.45;padding:.45rem .65rem;border-radius:.5rem;box-shadow:0 6px 20px rgba(0,0,0,.35);display:none;max-width:210px}
+.print-only{display:none}
+body.mob table{min-width:0!important}
+body.mob .cell{height:3rem}
+@media print{
+ @page{size:A4 landscape;margin:8mm}
+ :root,.dark{--bg:#fff;--card:#fff;--soft:#f1f5f9;--line:#cbd5e1;--tx:#1e293b;--mu:#64748b;--hd:#1e3a5f;--ac:#1e3a5f;--pri:#1e3a5f}
+ *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ html,body{height:auto!important;overflow:visible!important;background:#fff!important}
+ #vHist,.side,#bd,#menuBtn,#selBar,#dayTabs,#modal,#tip,.del,.pdf-ignore,.np{display:none!important}
+ #vEdit{display:block!important;height:auto!important}
+ main{height:auto!important;overflow:visible!important;padding:0!important}
+ #sheet{max-width:none!important;box-shadow:none!important;border:0!important;padding:0!important;border-radius:0!important}
+ .overflow-x-auto{overflow:visible!important}
+ table{min-width:0!important}
+ [data-d]{display:table-cell!important}
+ td.cell{height:7mm!important;padding:1px!important}
+ td.cell>div{min-height:0!important;height:100%!important}
+ #note{display:none!important}.print-only{display:block!important}
+}
 </style>
 </head>
 <body>
@@ -93,6 +113,21 @@ summary{list-style:none;cursor:pointer}summary::-webkit-details-marker{display:n
   </section>
 
   <section class="space-y-2">
+    <h2 class="text-sm font-semibold">Şablon ve başlık</h2>
+    <details class="card rounded-xl">
+      <summary class="px-3 py-2.5 text-sm font-semibold flex justify-between">Şablonlar <span class="mu">▾</span></summary>
+      <div class="p-3 pt-0 space-y-2"><select id="tplSel" class="inp"></select>
+        <div class="grid grid-cols-3 gap-2"><button id="tplUse" class="btn pri">Uygula</button><button id="tplSave" class="btn">Kaydet</button><button id="tplDel" class="btn text-rose-500">Sil</button></div>
+        <p class="text-[11px] mu">Uygula: seçili şablonu bu programa yükler. Kaydet: bu programı şablon yapar.</p></div>
+    </details>
+    <details class="card rounded-xl">
+      <summary class="px-3 py-2.5 text-sm font-semibold flex justify-between">Çıktı başlığı ve logo <span class="mu">▾</span></summary>
+      <div class="p-3 pt-0 space-y-2"><input id="cfgOrg" class="inp" placeholder="Kurum / takım adı"><input id="cfgMentor" class="inp" placeholder="Mentör adı">
+        <div class="grid grid-cols-2 gap-2"><label class="btn text-center cursor-pointer">Logo yükle<input id="logoIn" type="file" accept="image/*" class="hidden"></label><button id="logoDel" class="btn">Logoyu kaldır</button></div></div>
+    </details>
+  </section>
+
+  <section class="space-y-2">
     <h2 class="text-sm font-semibold">Çalışma türü</h2>
     <div id="modes" class="grid grid-cols-3 gap-1 p-1 soft rounded-xl">
       <button class="seg" data-m="0">Ders</button><button class="seg" data-m="1">Soru çözümü</button><button class="seg" data-m="2">Ders tekrarı</button>
@@ -134,8 +169,10 @@ summary{list-style:none;cursor:pointer}summary::-webkit-details-marker{display:n
       <label class="btn text-center cursor-pointer">Yedekten yükle<input id="bkIn" type="file" accept=".json,application/json" class="hidden"></label></div>
   </section>
 
-  <div class="grid grid-cols-2 lg:grid-cols-1 gap-2">
-    <button id="pdfBtn" class="py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm">PDF olarak indir</button>
+  <div class="grid grid-cols-2 gap-2">
+    <button id="printBtn" class="col-span-2 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm">Yazdır / PDF kaydet (net)</button>
+    <button id="statBtn" class="btn">İstatistikler</button><button id="csvBtn" class="btn">Excel (CSV)</button>
+    <button id="pdfBtn" class="btn">PDF indir (resim)</button>
     <button id="clearBtn" class="btn py-3 text-rose-500">Tabloyu temizle</button>
   </div>
 </aside>
@@ -149,13 +186,14 @@ summary{list-style:none;cursor:pointer}summary::-webkit-details-marker{display:n
   </div>
   <div id="sheet" class="card mx-auto max-w-[1240px] rounded-2xl shadow-xl p-4 sm:p-6">
     <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 pb-4 mb-4 border-b-2" style="border-color:var(--ac)">
-      <h2 class="display text-2xl sm:text-3xl font-extrabold ac">Mentörlük Ders Programı</h2>
+      <div class="flex items-center gap-3"><img id="pLogo" class="hidden h-12 w-auto" alt=""><div><div id="pOrg" class="text-xs mu font-semibold"></div><h2 class="display text-2xl sm:text-3xl font-extrabold ac">Mentörlük Ders Programı</h2></div></div>
       <div class="flex gap-5 text-sm">
         <div><div class="text-[11px] mu">Öğrenci</div><div id="pName" class="font-bold"></div></div>
         <div><div class="text-[11px] mu">Sınıf</div><div id="pClass" class="font-bold ac"></div></div>
         <div><div class="text-[11px] mu">Tarih</div><div id="pDate" class="font-bold"></div></div>
       </div>
     </div>
+    <div id="dayTabs" class="flex gap-1 mb-3 overflow-x-auto sm:hidden"></div>
     <div class="overflow-x-auto rounded-xl border bd">
       <table class="w-full min-w-[720px] border-collapse text-center">
         <thead><tr id="thead" class="hd text-white text-xs"></tr></thead>
@@ -168,8 +206,20 @@ summary{list-style:none;cursor:pointer}summary::-webkit-details-marker{display:n
       <span class="flex items-center gap-1.5"><i class="m2 inline-block w-4 h-3 rounded bg-slate-500"></i>Ders tekrarı</span>
       <span class="flex items-center gap-1.5"><i class="school inline-block w-4 h-3 rounded border bd"></i>Okul (Pzt-Cum 10:00-17:00)</span>
     </div>
+    <div id="noteWrap" class="mt-4"><div class="text-[11px] mu font-semibold mb-1">Haftalık hedefler / öğretmen notu / ödevler</div>
+      <textarea id="note" rows="3" class="inp" placeholder="Bu hafta için hedefler, notlar veya ödevler..."></textarea>
+      <div id="noteP" class="print-only text-xs" style="white-space:pre-wrap"></div></div>
   </div>
 </main>
+</div>
+
+<div id="tip"></div>
+<div id="modal" class="hidden fixed inset-0 z-50 bg-black/50 p-3 sm:p-8 overflow-y-auto">
+  <div class="card rounded-2xl max-w-2xl mx-auto p-5">
+    <div class="flex justify-between items-center mb-3"><h3 class="display text-xl font-extrabold ac">İstatistikler</h3><button id="mX" class="btn">Kapat</button></div>
+    <div id="mScope" class="grid grid-cols-2 gap-1 p-1 soft rounded-xl mb-4"><button class="seg" data-s="0">Bu program</button><button class="seg" data-s="1">Tüm programlar</button></div>
+    <div id="mBody"></div>
+  </div>
 </div>
 
 <!-- ===== GEÇMİŞ KAYITLAR ===== -->
@@ -205,6 +255,14 @@ const plan=()=>DB.plans.find(p=>p.id===DB.pid&&p.sid===DB.sid);
 const course=id=>DB.courses.find(c=>c.id===id);
 const plansOf=sid=>DB.plans.filter(p=>p.sid===sid).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
 const lab=v=>v.m===1?'Soru çözümü'+(v.q?': '+v.q:''):v.m===2?'Ders tekrarı':'';
+function mkTpl(name,rows){const g={};rows.forEach(([ds,ts,c,m,q])=>ds.forEach(d=>ts.forEach(t=>g[d+'-'+t]=q?{c,m,q}:{c,m})));return{id:uid(),name,start:8,end:23,grid:g}}
+if(!DB.cfg)DB.cfg={org:'Falcons Robotik',mentor:'Mustafa Demirkıran',logo:''};
+if(!DB.tpls)DB.tpls=[
+ mkTpl('Sayısal 12. Sınıf',[[[0,2,4],[17],'c0',1,40],[[0,2,4],[18],'c1',0],[[0,2,4],[20],'c2',2],[[1,3],[17],'c7',0],[[1,3],[18],'c1',1,30],[[1,3],[20],'c0',2],[[5],[10,11],'c0',1,60],[[5],[14,15],'c1',1,40],[[5],[17],'c2',2],[[6],[10,11],'c7',0],[[6],[14],'c0',2],[[6],[16],'c3',0]]),
+ mkTpl('Sınav Haftası',[[[0,1,2,3,4],[17],'c0',2],[[0,1,2,3,4],[18],'c1',1,30],[[0,1,2,3,4],[20],'c2',2],[[5,6],[10,11],'c0',1,60],[[5,6],[14,15],'c1',1,40],[[5,6],[17],'c7',2]])];
+let day=(new Date().getDay()+6)%7;
+document.head.appendChild(Object.assign(document.createElement('style'),{textContent:[0,1,2,3,4,5,6].map(d=>`body.mob:not([data-day="${d}"]) [data-d="${d}"]{display:none}`).join('')}));
+const mq=()=>document.body.classList.toggle('mob',innerWidth<640);mq();addEventListener('resize',mq);document.body.dataset.day=day;
 
 function applyTheme(){document.documentElement.classList.toggle('dark',!!DB.dark);
   document.querySelectorAll('.themeBtn').forEach(b=>b.textContent=DB.dark?'☀ Aydınlık':'☾ Karanlık')}
@@ -266,15 +324,15 @@ function renderEdit(){
   $('pName').textContent=s?s.name:'Öğrenci seçilmedi';$('pClass').textContent=s&&s.cls||'-';$('pDate').textContent=p?fmt(p.date):'-';
   if(!s)$('dSt').open=true;
   if(innerWidth>=1024)$('dHrs').open=true;
-  refreshModes();renderBk();buildTable()}
+  refreshModes();renderBk();renderCfg();buildTable()}
 
 function buildTable(){
   const p=plan()||{start:8,end:23},t0=(new Date().getDay()+6)%7;
-  $('thead').innerHTML='<th class="py-2.5 px-2 w-[74px] sticky left-0 hd z-[1]">Saat</th>'+DAYS.map((d,i)=>`<th class="py-2.5 px-1" ${i===t0?'style="background:var(--pri)"':''}>${d}</th>`).join('');
+  $('thead').innerHTML='<th class="py-2.5 px-2 w-[74px] sticky left-0 hd z-[1]">Saat</th>'+DAYS.map((d,i)=>`<th data-d="${i}" class="py-2.5 px-1" ${i===t0?'style="background:var(--pri)"':''}>${d}</th>`).join('');
   let h='';
   for(let t=p.start;t<=p.end;t++){
     h+=`<tr class="${t%2?'r0':'r1'} border-t bd"><td class="sticky left-0 z-[1] soft border-r bd py-1 font-bold text-[11px]">${hh(t)}<br><span class="font-normal mu text-[9px]">${hh(t+1)}</span></td>`+
-      DAYS.map((_,i)=>`<td class="cell p-1 h-11 border-r bd min-w-[84px]" data-k="${i}-${t}"></td>`).join('')+'</tr>'}
+      DAYS.map((_,i)=>`<td data-d="${i}" class="cell p-1 h-11 border-r bd min-w-[84px]" data-k="${i}-${t}"></td>`).join('')+'</tr>'}
   $('tbody').innerHTML=h;paintGrid()}
 
 function paintGrid(){
@@ -342,7 +400,13 @@ tb.addEventListener('click',e=>{
   if(copyMode){const v=p.grid[k];if(!v)return;sel=v.c;mode=v.m;if(v.q)qty=v.q;copyMode=false;updSel();paintGrid();return}
   if(sel)p.grid[k]=brush();else if(p.grid[k])delete p.grid[k];
   paintGrid()});
-tb.addEventListener('mouseover',e=>{const t=e.target.closest('.cell');if(t)hov=t.dataset.k});
+const tip=$('tip');
+tb.addEventListener('mouseover',e=>{const t=e.target.closest('.cell');if(t)hov=t.dataset.k;
+  const c=e.target.closest('[data-card]'),p=plan();if(!c||!p){tip.style.display='none';return}
+  const k=c.dataset.card,v=p.grid[k],cr=v&&course(v.c),[d,h]=k.split('-').map(Number);if(!cr)return;
+  tip.innerHTML=`<b>${esc(cr.name)}</b><br>${MODES[v.m]}${v.q?' · '+v.q+' soru':''}<br><span style="opacity:.7">${DAYS[d]} ${hh(h)}–${hh(h+1)}</span>`;tip.style.display='block'});
+tb.addEventListener('mousemove',e=>{tip.style.left=Math.min(e.clientX+14,innerWidth-220)+'px';tip.style.top=(e.clientY+16)+'px'});
+tb.addEventListener('mouseleave',()=>tip.style.display='none');
 tb.addEventListener('dragstart',e=>{const c=e.target.closest('[data-card]');if(!c)return;const p=plan();
   drag={v:{...p.grid[c.dataset.card]},from:c.dataset.card};e.dataTransfer.setData('text/plain','x');e.dataTransfer.effectAllowed='move';c.classList.add('dragging')});
 tb.addEventListener('dragend',()=>{drag=null;paintGrid()});
@@ -383,20 +447,84 @@ $('pdfBtn').onclick=()=>{
   const p=plan(),s=stu();if(!p)return needStudent();
   const btn=$('pdfBtn'),old=btn.textContent,wasDark=document.documentElement.classList.contains('dark');
   document.documentElement.classList.remove('dark');
+  const wasMob=document.body.classList.contains('mob');document.body.classList.remove('mob');
   const host=document.createElement('div');host.style.cssText='position:absolute;left:-30000px;top:0';
   const c=$('sheet').cloneNode(true);c.removeAttribute('id');
   c.style.cssText='width:1120px;max-width:none;margin:0;box-shadow:none;border-radius:0';
   c.querySelectorAll('.pdf-ignore').forEach(x=>x.remove());
+  c.querySelector('#dayTabs').remove();c.querySelector('#noteP').remove();
+  {const ta=c.querySelector('#note');if(p.note){const d=document.createElement('div');d.style.cssText='white-space:pre-wrap;font-size:12px';d.textContent=p.note;ta.replaceWith(d)}else c.querySelector('#noteWrap').remove()}
   c.querySelectorAll('.overflow-x-auto').forEach(x=>x.style.overflow='visible');
   c.querySelectorAll('table').forEach(x=>x.style.minWidth='0');
   c.querySelectorAll('td.cell').forEach(td=>{td.style.height='30px';td.style.padding='2px';if(td.firstChild)td.firstChild.style.minHeight='26px'});
   host.appendChild(c);document.body.appendChild(host);
   const H=c.offsetHeight;if(H/1120>0.66)c.style.width=Math.ceil(H/0.66)+'px';   // A4 yatay oranına sığdır
   btn.disabled=true;btn.textContent='Hazırlanıyor...';
-  const done=()=>{host.remove();wasDark&&document.documentElement.classList.add('dark');btn.disabled=false;btn.textContent=old};
+  const done=()=>{host.remove();wasMob&&document.body.classList.add('mob');wasDark&&document.documentElement.classList.add('dark');btn.disabled=false;btn.textContent=old};
   const nm=((s.name+'_'+p.date).replace(/[^\wçğıöşüÇĞİÖŞÜ\s-]/g,'').replace(/\s+/g,'_'))||'Program';
   html2pdf().set({margin:6,filename:nm+'.pdf',image:{type:'jpeg',quality:.98},html2canvas:{scale:2,useCORS:true,scrollX:0,scrollY:0},
     jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}}).from(c).save().then(done).catch(()=>{done();alert('PDF oluşturulamadı, tekrar dene.')})};
+
+// ---------- BAŞLIK / LOGO / NOT / GÜN SEKMELERİ ----------
+function upOrg(){const c=DB.cfg;$('pOrg').textContent=[c.org,c.mentor&&'Mentör: '+c.mentor].filter(Boolean).join(' · ')}
+function renderTabs(){$('dayTabs').innerHTML=DAYS.map((d,i)=>`<button class="btn shrink-0 ${i===day?'on':''}" data-day="${i}">${d.slice(0,3)}</button>`).join('')}
+function renderCfg(){const c=DB.cfg,p=plan();upOrg();
+  const lg=$('pLogo');lg.src=c.logo||'';lg.classList.toggle('hidden',!c.logo);
+  $('cfgOrg').value=c.org;$('cfgMentor').value=c.mentor;
+  $('note').value=p&&p.note||'';$('note').disabled=!p;$('noteP').textContent=p&&p.note||'';$('noteWrap').classList.toggle('np',!(p&&p.note));
+  $('tplSel').innerHTML=DB.tpls.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');renderTabs()}
+$('cfgOrg').oninput=e=>{DB.cfg.org=e.target.value;save();upOrg()};
+$('cfgMentor').oninput=e=>{DB.cfg.mentor=e.target.value;save();upOrg()};
+$('logoIn').onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image;
+  im.onload=()=>{const h=Math.min(120,im.height),w=Math.round(im.width*h/im.height),c=document.createElement('canvas');
+    c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);DB.cfg.logo=c.toDataURL('image/png');save();renderCfg()};
+  im.src=URL.createObjectURL(f);e.target.value=''};
+$('logoDel').onclick=()=>{DB.cfg.logo='';save();renderCfg()};
+$('note').oninput=e=>{const p=plan();if(!p)return;p.note=e.target.value;$('noteP').textContent=p.note;$('noteWrap').classList.toggle('np',!p.note);save()};
+$('dayTabs').onclick=e=>{const b=e.target.closest('[data-day]');if(!b)return;day=+b.dataset.day;document.body.dataset.day=day;renderTabs()};
+
+// ---------- ŞABLONLAR ----------
+$('tplUse').onclick=()=>{const p=plan(),t=DB.tpls.find(x=>x.id===$('tplSel').value);if(!p)return needStudent();if(!t)return;
+  if(Object.keys(p.grid).length&&!confirm('Bu programın mevcut içeriği şablonla değiştirilecek. Devam edilsin mi?'))return;
+  p.grid={};for(const k in t.grid)if(course(t.grid[k].c))p.grid[k]={...t.grid[k]};p.start=t.start;p.end=t.end;save();renderEdit()};
+$('tplSave').onclick=()=>{const p=plan();if(!p)return needStudent();const n=(prompt('Şablon adı')||'').trim();if(!n)return;
+  DB.tpls.push({id:uid(),name:n,start:p.start,end:p.end,grid:JSON.parse(JSON.stringify(p.grid))});save();renderCfg();$('tplSel').value=DB.tpls[DB.tpls.length-1].id};
+$('tplDel').onclick=()=>{const t=DB.tpls.find(x=>x.id===$('tplSel').value);if(!t||!confirm(`"${t.name}" şablonu silinsin mi?`))return;
+  DB.tpls=DB.tpls.filter(x=>x!==t);save();renderCfg()};
+
+// ---------- İSTATİSTİK ----------
+let sScope=0;
+function agg(ps){const r={h:0,q:0,m:[0,0,0],c:{}};
+  ps.forEach(p=>{for(const k in p.grid){const [d,t]=k.split('-').map(Number),v=p.grid[k];if(sch(d,t)||!course(v.c))continue;r.h++;r.q+=v.q||0;r.m[v.m]++;r.c[v.c]=(r.c[v.c]||0)+1}});return r}
+const bar=(l,n,tot,col)=>`<div class="mb-2"><div class="flex justify-between text-xs"><span>${esc(l)}</span><span class="mu">${n} sa · %${Math.round(n*100/(tot||1))}</span></div><div class="h-2.5 rounded soft overflow-hidden"><div class="h-full" style="width:${n*100/(tot||1)}%;background:${col}"></div></div></div>`;
+function renderStats(){
+  const s=stu(),p=plan();if(!p)return;
+  const ps=sScope?plansOf(s.id):[p],r=agg(ps),cs=Object.entries(r.c).sort((a,b)=>b[1]-a[1]);
+  const top=cs.slice(0,2).map(([id,n])=>`%${Math.round(n*100/r.h)} ${esc(course(id).name)}`).join(', ');
+  let h=`<p class="text-sm mb-4"><b>${esc(s.name)}</b> · ${sScope?'tüm programlar':fmt(p.date)+' programı'}${r.h?`: toplam ${r.q} soru${top?', '+top:''}`:''}</p>`+
+    '<div class="grid grid-cols-3 gap-2 text-center mb-5">'+[[r.h,'saat'],[r.q,'soru'],[ps.length,'program']].map(([a,b])=>`<div class="soft rounded-xl p-3"><div class="text-2xl font-extrabold ac">${a}</div><div class="text-[11px] mu">${b}</div></div>`).join('')+'</div>';
+  h+='<h4 class="text-sm font-semibold mb-2">Ders dağılımı</h4>'+(cs.length?cs.map(([id,n])=>bar(course(id).name,n,r.h,course(id).color)).join(''):'<p class="mu text-sm mb-3">Henüz veri yok.</p>');
+  h+='<h4 class="text-sm font-semibold mt-4 mb-2">Çalışma türü</h4>'+MODES.map((m,i)=>bar(m,r.m[i],r.h,['#64748b','#2563eb','#059669'][i])).join('');
+  if(sScope&&ps.length>1){const rs=ps.map(x=>agg([x])),mx=Math.max(1,...rs.map(x=>x.q));
+    h+='<h4 class="text-sm font-semibold mt-4 mb-2">Haftalık soru sayısı</h4>'+ps.map((x,i)=>`<div class="mb-2"><div class="flex justify-between text-xs"><span>${fmt(x.date)}</span><span class="mu">${rs[i].q} soru · ${rs[i].h} sa</span></div><div class="h-2.5 rounded soft overflow-hidden"><div class="h-full bg-blue-500" style="width:${rs[i].q*100/mx}%"></div></div></div>`).join('')}
+  $('mBody').innerHTML=h;
+  document.querySelectorAll('#mScope .seg').forEach(b=>b.classList.toggle('on',+b.dataset.s===sScope))}
+$('statBtn').onclick=()=>{if(!plan())return needStudent();$('modal').classList.remove('hidden');renderStats()};
+$('mX').onclick=()=>$('modal').classList.add('hidden');
+$('modal').onclick=e=>{if(e.target.id==='modal')$('modal').classList.add('hidden')};
+$('mScope').onclick=e=>{const b=e.target.closest('.seg');if(!b)return;sScope=+b.dataset.s;renderStats()};
+
+// ---------- YAZDIR (vektörel) / CSV ----------
+$('printBtn').onclick=()=>{const p=plan(),s=stu();if(!p)return needStudent();
+  const old=document.title;document.title=((s.name+'_'+p.date).replace(/\s+/g,'_'))||old;
+  addEventListener('afterprint',()=>{document.title=old},{once:true});print()};
+$('csvBtn').onclick=()=>{const p=plan(),s=stu();if(!p)return needStudent();
+  const q=x=>'"'+String(x).replace(/"/g,'""')+'"';
+  const rows=[[[DB.cfg.org,DB.cfg.mentor&&'Mentör: '+DB.cfg.mentor,'Mentörlük Ders Programı'].filter(Boolean).join(' - ')],['Öğrenci',s.name,'Sınıf',s.cls,'Tarih',fmt(p.date)],[],['Saat',...DAYS]];
+  for(let t=p.start;t<=p.end;t++)rows.push([hh(t)+'-'+hh(t+1),...DAYS.map((_,d)=>{if(sch(d,t))return'OKUL';const v=p.grid[d+'-'+t],c=v&&course(v.c);return c?c.name+(v.m?' ('+lab(v)+')':''):''})]);
+  rows.push([],['Notlar',p.note||'']);
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+rows.map(r=>r.map(q).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'}));
+  a.download=((s.name+'_'+p.date).replace(/\s+/g,'_'))+'.csv';a.click()};
 
 // ---------- GEÇMİŞ SAYFASI ----------
 function mini(p){let h='<div class="grid gap-[2px] mt-3" style="grid-template-columns:repeat(7,1fr)">';
